@@ -13,15 +13,13 @@ import java.util.Optional;
 @RequestMapping("/projects")
 public class ProjectController {
 
-    Project project;
-
     private final ProjectRepository projectRepository;
 
     public ProjectController(ProjectRepository projectRepository) {
         this.projectRepository = projectRepository;
     }
 
-    @GetMapping
+    @GetMapping("/getAllProjects")
     public List<ProjectResponse> list(){
         return projectRepository.findAll().stream()
                 .map(p -> new ProjectResponse(p.getId(), p.getTitle(), p.getDescription()))
@@ -33,11 +31,31 @@ public class ProjectController {
         return projectRepository.findById(id);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public Project create(@RequestBody ProjectRequest request){
             Project project = new Project(
                     request.title(),
                     request.description());
             return projectRepository.save(project);
+    }
+    @PutMapping("/update")
+    public Project update(@RequestBody ProjectResponse request){
+        Project project = projectRepository.findById(request.id())
+                .orElseThrow(() -> new RuntimeException("Id nao encontrado" + request.id()));
+
+           project.setTitle(request.title());
+           project.setDescription(request.description());
+
+        return projectRepository.save(project);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public void delete(@PathVariable long id){
+        try {
+            projectRepository.deleteById(id);
+            System.out.println("Projeto deletado com sucesso.");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
